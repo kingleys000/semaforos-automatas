@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plano del cruce — ponle nombre a las calles</title>
+<style>
+  body { margin: 0; background: #f0f0ea; font-family: Arial, sans-serif; }
+  .barra {
+    max-width: 1000px; margin: 12px auto 8px; padding: 10px 14px;
+    background: #fff8e6; border: 1px solid #d9b84a; border-radius: 10px;
+    font-size: 14px; color: #6b5310; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .barra button {
+    background: #2f6bd8; color: #fff; border: none; border-radius: 7px;
+    padding: 7px 14px; font-size: 14px; cursor: pointer;
+  }
+  .barra button:hover { background: #2558b5; }
+  .contenedor { max-width: 1000px; margin: 0 auto 20px; }
+  svg { width: 100%; height: auto; display: block; background: #dfe9cf; border-radius: 10px; }
+  .nombre text { cursor: text; }
+  .nombre rect { cursor: text; }
+  .nombre:focus-within rect { stroke: #2f6bd8; stroke-dasharray: none; }
+</style>
+</head>
+<body>
+
+<div class="barra">
+  ✏️ <b>Haz clic en un recuadro punteado</b> y escribe el nombre de la calle. Cuando termines:
+  <button id="descargar">⬇ Descargar plano como imagen</button>
+</div>
+
+<div class="contenedor">
+<svg id="plano" xmlns="http://www.w3.org/2000/svg" width="1000" height="780" viewBox="0 0 1000 780" font-family="Arial">
+  <defs>
+    <marker id="flecha" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#ffffff"/>
+    </marker>
+  </defs>
+
+  <!-- Fondo -->
+  <rect x="0" y="0" width="1000" height="780" fill="#dfe9cf"/>
+
+  <!-- ============ CALLES (sin nombre) ============ -->
+  <!-- Calle horizontal (doble sentido) -->
+  <rect x="20" y="330" width="960" height="100" fill="#9aa0a8" stroke="#5f646a" stroke-width="2.5"/>
+  <!-- Calle vertical que viene del norte -->
+  <rect x="430" y="20" width="140" height="310" fill="#9aa0a8" stroke="#5f646a" stroke-width="2.5"/>
+  <!-- Columna derecha al sur del cruce -->
+  <rect x="500" y="430" width="70" height="340" fill="#9aa0a8" stroke="#5f646a" stroke-width="2.5"/>
+  <!-- Calle en curva (del oeste, baja hacia el sur) -->
+  <path d="M 20 548 L 250 548 Q 330 548 330 628" fill="none" stroke="#9aa0a8" stroke-width="62" stroke-linecap="round"/>
+  <rect x="330" y="600" width="30" height="60" fill="#9aa0a8"/>
+  <!-- Columna izquierda al sur del cruce -->
+  <rect x="330" y="430" width="170" height="340" fill="#9aa0a8" stroke="#5f646a" stroke-width="2.5"/>
+  <path d="M 330 628 L 330 660" stroke="#9aa0a8" stroke-width="62"/>
+
+  <!-- Líneas centrales discontinuas -->
+  <line x1="25" y1="380" x2="425" y2="380" stroke="#e8e6da" stroke-width="2.5" stroke-dasharray="13 11"/>
+  <line x1="575" y1="380" x2="975" y2="380" stroke="#e8e6da" stroke-width="2.5" stroke-dasharray="13 11"/>
+  <line x1="500" y1="25" x2="500" y2="325" stroke="#e8e6da" stroke-width="2.5" stroke-dasharray="13 11"/>
+  <line x1="535" y1="435" x2="535" y2="765" stroke="#e8e6da" stroke-width="2.5" stroke-dasharray="13 11"/>
+  <line x1="415" y1="435" x2="415" y2="765" stroke="#e8e6da" stroke-width="2.5" stroke-dasharray="13 11"/>
+  <path d="M 20 548 L 250 548 Q 330 548 330 628" fill="none" stroke="#e8e6da" stroke-width="2.5" stroke-dasharray="13 11"/>
+
+  <!-- ============ FLECHAS DE DIRECCIÓN ============ -->
+  <!-- Calle vertical del norte: carriles que bajan (izq) -->
+  <line x1="450" y1="55" x2="450" y2="115" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <line x1="450" y1="170" x2="450" y2="230" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <line x1="485" y1="90" x2="485" y2="150" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <line x1="485" y1="200" x2="485" y2="260" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <!-- Calle vertical del norte: carriles que suben (der) -->
+  <line x1="515" y1="115" x2="515" y2="55" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <line x1="550" y1="150" x2="550" y2="90" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <line x1="515" y1="230" x2="515" y2="170" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <line x1="550" y1="265" x2="550" y2="205" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <!-- Horizontal: carril superior hacia el oeste -->
+  <line x1="200" y1="362" x2="120" y2="362" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <line x1="340" y1="362" x2="260" y2="362" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <!-- Horizontal: carril inferior hacia el este -->
+  <line x1="640" y1="400" x2="720" y2="400" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <line x1="800" y1="400" x2="880" y2="400" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <!-- Columnas del sur: suben hacia el cruce -->
+  <line x1="518" y1="740" x2="518" y2="680" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <line x1="552" y1="700" x2="552" y2="640" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <line x1="518" y1="600" x2="518" y2="540" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <line x1="552" y1="530" x2="552" y2="470" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <line x1="380" y1="740" x2="380" y2="680" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <line x1="455" y1="700" x2="455" y2="640" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <line x1="380" y1="540" x2="380" y2="480" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <!-- Curva: hacia el oeste -->
+  <line x1="160" y1="552" x2="80" y2="552" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+  <line x1="300" y1="590" x2="250" y2="545" stroke="#fff" stroke-width="5" marker-end="url(#flecha)"/>
+
+  <!-- Semáforos y nombres se generan con JS -->
+  <g id="semaforos"></g>
+  <g id="nombres"></g>
+
+  <!-- Brújula -->
+  <circle cx="945" cy="715" r="22" fill="#ffffff" fill-opacity="0.9" stroke="#333" stroke-width="2"/>
+  <polygon points="945,698 939,720 945,714 951,720" fill="#b03a2e"/>
+  <text x="945" y="690" font-size="16" font-weight="bold" fill="#333" text-anchor="middle">N</text>
+</svg>
+</div>
+
+<script>
+const svg = document.getElementById('plano');
+const NS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  parent.appendChild(e);
+  return e;
+}
+
+// ============ SEMÁFOROS (posiciones según tu croquis) ============
+const gSem = document.getElementById('semaforos');
+const sems = [
+  { id: 'S4', x: 452, y: 322 },
+  { id: 'S3', x: 488, y: 322 },
+  { id: 'S2', x: 545, y: 322 },
+  { id: 'S5', x: 352, y: 545 },
+  { id: 'S1', x: 538, y: 545 }
+];
+for (const s of sems) {
+  const g = el('g', {}, gSem);
+  el('rect', { x: s.x - 8, y: s.y - 18, width: 16, height: 36, rx: 3, fill: '#1c1f24', stroke: '#000', 'stroke-width': 1 }, g);
+  el('circle', { cx: s.x, cy: s.y - 10, r: 3.6, fill: '#e33' }, g);
+  el('circle', { cx: s.x, cy: s.y, r: 3.6, fill: '#eb3' }, g);
+  el('circle', { cx: s.x, cy: s.y + 10, r: 3.6, fill: '#3c5' }, g);
+  const t = el('text', { x: s.x, y: s.y + 32, 'text-anchor': 'middle', 'font-size': 15, 'font-weight': 'bold', fill: '#1c1f24' }, g);
+  t.textContent = s.id;
+}
+
+// ============ RECUADROS EDITABLES PARA NOMBRES ============
+const gNom = document.getElementById('nombres');
+const cajas = [
+  { x: 432, y: 150, w: 136, pista: 'nombre' },   // calle vertical del norte
+  { x: 60,  y: 356, w: 150, pista: 'nombre' },   // horizontal, lado oeste
+  { x: 800, y: 356, w: 150, pista: 'nombre' },   // horizontal, lado este
+  { x: 600, y: 560, w: 150, pista: 'nombre', guia: [575, 573] },  // columna derecha (sur)
+  { x: 150, y: 700, w: 150, pista: 'nombre', guia: [330, 713] },  // columna izquierda (sur)
+  { x: 55,  y: 605, w: 150, pista: 'nombre' }    // calle en curva
+];
+for (const c of cajas) {
+  if (c.guia) {
+    el('line', { x1: c.x + (c.guia[0] > c.x ? 0 : c.w), y1: c.y + 13, x2: c.guia[0], y2: c.guia[1],
+      stroke: '#8899aa', 'stroke-width': 1.5, 'stroke-dasharray': '4 4' }, gNom);
+  }
+  const g = el('g', { 'class': 'nombre' }, gNom);
+  el('rect', { x: c.x, y: c.y, width: c.w, height: 26, rx: 6,
+    fill: '#ffffff', 'fill-opacity': 0.88, stroke: '#8899aa', 'stroke-width': 1.5, 'stroke-dasharray': '5 4' }, g);
+  const t = el('text', { x: c.x + c.w / 2, y: c.y + 18, 'text-anchor': 'middle',
+    'font-size': 15, fill: '#222', contenteditable: 'true' }, g);
+  t.textContent = '';
+  g.addEventListener('click', () => t.focus());
+}
+
+// ============ DESCARGAR COMO PNG ============
+document.getElementById('descargar').addEventListener('click', () => {
+  const data = new XMLSerializer().serializeToString(svg);
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 2000; canvas.height = 1560;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#dfe9cf'; ctx.fillRect(0, 0, 2000, 1560);
+    ctx.drawImage(img, 0, 0, 2000, 1560);
+    const a = document.createElement('a');
+    a.download = 'mi_plano_cruce.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(data);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+{
+  "controls": "passed",
+  "signals": "S1 → S2+S3 → S4 → S5 → S1; synchronized transitions and configurable stage lengths passed",
+  "calle9a": "one-way from Calle 9 and La Gran Colombia",
+  "calle10": "one-way from La Gran Colombia and both Diagonal approaches",
+  "routes": 9,
+  "carSlots": 225,
+  "offRoad": [],
+  "overlapFrames": 0,
+  "redViolations": 0,
+  "waitingSamples": 10547,
+  "launches": [
+    {
+      "route": "diagonal-salida",
+      "launched": 3
+    },
+    {
+      "route": "diagonal-regreso",
+      "launched": 33
+    },
+    {
+      "route": "gran-colombia-hacia-10",
+      "launched": 16
+    },
+    {
+      "route": "gran-colombia-salida",
+      "launched": 5
+    },
+    {
+      "route": "calle-9",
+      "launched": 9
+    },
+    {
+      "route": "calle-9-hacia-9a",
+      "launched": 8
+    },
+    {
+      "route": "gran-colombia-hacia-9a",
+      "launched": 16
+    },
+    {
+      "route": "diagonal-izquierda-hacia-10",
+      "launched": 2
+    },
+    {
+      "route": "diagonal-derecha-hacia-10",
+      "launched": 33
+    }
+  ],
+  "flow": [
+    {
+      "percent": 25,
+      "arrivals": 20,
+      "meanActive": 15.487222222222222
+    },
+    {
+      "percent": 300,
+      "arrivals": 24,
+      "meanActive": 104.63555555555556
+    }
+  ],
+  "minVisible": 50
+}
