@@ -8,15 +8,15 @@
   "offRoad": [],
   "overlapFrames": 0,
   "redViolations": 0,
-  "waitingSamples": 10547,
+  "waitingSamples": 12911,
   "launches": [
     {
       "route": "diagonal-salida",
-      "launched": 3
+      "launched": 13
     },
     {
       "route": "diagonal-regreso",
-      "launched": 33
+      "launched": 24
     },
     {
       "route": "gran-colombia-hacia-10",
@@ -24,15 +24,15 @@
     },
     {
       "route": "gran-colombia-salida",
-      "launched": 5
+      "launched": 16
     },
     {
       "route": "calle-9",
-      "launched": 9
+      "launched": 16
     },
     {
       "route": "calle-9-hacia-9a",
-      "launched": 8
+      "launched": 16
     },
     {
       "route": "gran-colombia-hacia-9a",
@@ -40,24 +40,24 @@
     },
     {
       "route": "diagonal-izquierda-hacia-10",
-      "launched": 2
+      "launched": 12
     },
     {
       "route": "diagonal-derecha-hacia-10",
-      "launched": 33
+      "launched": 23
     }
   ],
   "flow": [
     {
       "percent": 25,
-      "arrivals": 20,
+      "arrivals": 21,
       "meanActive": 15.487222222222222
     },
     {
       "percent": 300,
       "arrivals": 24,
-      "meanActive": 104.63555555555556
+      "meanActive": 98.93888888888888
     }
   ],
-  "minVisible": 50
+  "minVisible": 53
 }

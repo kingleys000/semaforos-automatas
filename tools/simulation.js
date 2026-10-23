@@ -155,6 +155,23 @@
     }
     r.nextSpawn=ri*1.7;r.retryIn=0;r.launched=0;
   });
+  // Calle 9 and the left Diagonal intersect before their signal markers.
+  // Hold red queues before that shared space so they cannot block S4's green.
+  // Keep the drawn geometry and initial vehicle placement unchanged; cars
+  // already inside the shared space continue out of it on their existing route.
+  const sharedApproaches=routes.filter(route=>['S4','S5'].includes(route.signal.id));
+  const holdingDistances=new Map();
+  for(const route of sharedApproaches) {
+    const crossing=sharedApproaches.filter(other=>other.signal!==route.signal)
+      .flatMap(other=>other.points.filter(p=>p.d<=other.signalD+25).map(p=>pointAt(other,p.d)));
+    for(let d=0;d<route.signalD;d+=1) {
+      const position=pointAt(route,d);
+      if(crossing.some(other=>overlaps(position,other,1.5))) {
+        holdingDistances.set(route,Math.max(0,d-1));break;
+      }
+    }
+  }
+  for(const [route,d] of holdingDistances)route.signalD=d;
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let playing=!reduced, speed=1, lastTime=null,simulationTime=-72;
   const draw=car=>car.node.setAttribute('transform',`translate(${car.x.toFixed(2)} ${car.y.toFixed(2)}) rotate(${(car.angle*180/Math.PI).toFixed(2)})`);
@@ -241,7 +258,15 @@
         if(car.d<=car.route.signalD+1e-6&&signalState(car.route.signal,simulationTime).phase!=='green')d=Math.min(d,car.route.signalD);
         if(d<=car.d+1e-7)continue;
         const nearby=active.filter(other=>other!==car&&other.active&&(other.x-car.x)**2+(other.y-car.y)**2<900);
-        const blocked=distance=>{const position=pointAt(car.route,distance);return nearby.some(other=>overlaps(position,other,1));};
+        const blocked=distance=>{
+          const position=pointAt(car.route,distance);
+          return nearby.some(other=>{
+            // A turning leader can sweep its rear safety margin over its
+            // follower. Keep physical clearance without locking both cars.
+            const behind=(other.x-car.x)*Math.cos(car.angle)+(other.y-car.y)*Math.sin(car.angle)<0;
+            return overlaps(position,other,behind?0:1);
+          });
+        };
         // Advance to the available gap instead of discarding the whole movement
         // whenever its endpoint would touch the preceding vehicle.
         if(blocked(d)) {
