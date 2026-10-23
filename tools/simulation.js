@@ -155,23 +155,6 @@
     }
     r.nextSpawn=ri*1.7;r.retryIn=0;r.launched=0;
   });
-  // Calle 9 and the left Diagonal intersect before their signal markers.
-  // Hold red queues before that shared space so they cannot block S4's green.
-  // Keep the drawn geometry and initial vehicle placement unchanged; cars
-  // already inside the shared space continue out of it on their existing route.
-  const sharedApproaches=routes.filter(route=>['S4','S5'].includes(route.signal.id));
-  const holdingDistances=new Map();
-  for(const route of sharedApproaches) {
-    const crossing=sharedApproaches.filter(other=>other.signal!==route.signal)
-      .flatMap(other=>other.points.filter(p=>p.d<=other.signalD+25).map(p=>pointAt(other,p.d)));
-    for(let d=0;d<route.signalD;d+=1) {
-      const position=pointAt(route,d);
-      if(crossing.some(other=>overlaps(position,other,1.5))) {
-        holdingDistances.set(route,Math.max(0,d-1));break;
-      }
-    }
-  }
-  for(const [route,d] of holdingDistances)route.signalD=d;
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let playing=!reduced, speed=1, lastTime=null,simulationTime=-72;
   const draw=car=>car.node.setAttribute('transform',`translate(${car.x.toFixed(2)} ${car.y.toFixed(2)}) rotate(${(car.angle*180/Math.PI).toFixed(2)})`);
@@ -261,6 +244,12 @@
         const blocked=distance=>{
           const position=pointAt(car.route,distance);
           return nearby.some(other=>{
+            // The user accepts visual overlap at S4/S5 so the original
+            // waiting positions can stay in place. Only this crossing is
+            // exempt; cars in the same queue still keep their separation.
+            const pair=[car.route.signal.id,other.route.signal.id];
+            if(pair.includes('S4')&&pair.includes('S5')&&
+              distance<=car.route.signalD+40&&other.d<=other.route.signalD+40)return false;
             // A turning leader can sweep its rear safety margin over its
             // follower. Keep physical clearance without locking both cars.
             const behind=(other.x-car.x)*Math.cos(car.angle)+(other.y-car.y)*Math.sin(car.angle)<0;

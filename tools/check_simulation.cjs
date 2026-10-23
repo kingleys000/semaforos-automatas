@@ -17,6 +17,14 @@ const saved=new Map();
 const window={matchMedia:()=>({matches:false}),requestAnimationFrame:()=>{},localStorage:{getItem:key=>saved.get(key)||null,setItem:(key,value)=>saved.set(key,value)}};
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'simulation.js'),'utf8'),{window,document,Math,Number,Object,String});
 const sim=window.cruce2D;
+const acceptedCrossingOverlap=(a,b)=>{
+  const pair=[a.route.signal.id,b.route.signal.id];
+  return pair.includes('S4')&&pair.includes('S5')&&a.d<=a.route.signalD+40&&b.d<=b.route.signalD+40;
+};
+for(const route of sim.routes){
+  const nearest=route.points.reduce((a,p)=>Math.hypot(p.x-route.signal.x,p.y-route.signal.y)<Math.hypot(a.x-route.signal.x,a.y-route.signal.y)?p:a);
+  assert.equal(route.signalD,Math.max(0,nearest.d-10),'Original waiting positions must remain unchanged');
+}
 assert.equal(sim.playing,true);
 document.getElementById('play').fire('click');assert.equal(sim.playing,false);
 document.getElementById('play').fire('click');assert.equal(sim.playing,true);
@@ -103,7 +111,7 @@ function measureFlow(percent){
   for(let frame=0;frame<1800;frame++){
     sim.advance(1/30,false);
     const active=sim.cars.filter(c=>c.active);activeSamples+=active.length;
-    if(frame%3===0)for(let i=0;i<active.length;i++)for(let j=i+1;j<active.length;j++)assert(!sim.overlaps(active[i],active[j],0),'Flow adjustment must not cause collisions');
+    if(frame%3===0)for(let i=0;i<active.length;i++)for(let j=i+1;j<active.length;j++)assert(!sim.overlaps(active[i],active[j],0)||acceptedCrossingOverlap(active[i],active[j]),'Only the accepted S4/S5 crossing may overlap');
 
   }
   return {percent,arrivals:sim.routes.reduce((n,r)=>n+r.launched,0)-initial,meanActive:activeSamples/1800};
@@ -146,20 +154,32 @@ assert(rightTurn.points.some(p=>p.x>390&&p.x<420&&p.y>398&&p.y<426),'The right D
 fs.mkdirSync(path.join(root,'verificacion'),{recursive:true});
 fs.writeFileSync(path.join(root,'verificacion','routes.json'),JSON.stringify(sim.routes));
 fs.writeFileSync(path.join(root,'verificacion','initial-cars.json'),JSON.stringify(sim.cars.filter(c=>c.active).map(({route,node,...rest})=>({...rest,color:route.color,route:route.id}))));
-let overlapFrames=0,redViolations=0,waitingSamples=0,minVisible=Infinity;
+let overlapFrames=0,acceptedOverlapFrames=0,redViolations=0,waitingSamples=0,minVisible=Infinity;
+const s4Passages=new Map();
 const launchesBefore=sim.routes.map(r=>r.launched),animationFrames=[];
 for(let frame=0;frame<3600;frame++){
   const previous=sim.cars.map(car=>({active:car.active,d:car.d,plan:car.plan}));
   sim.advance(1/30);
+  for(const car of sim.cars){
+    const before=previous[car.id];
+    if(car.route.signal.id==='S4'&&before.active&&car.active&&before.plan===car.plan&&before.d<=car.route.signalD&&car.d>car.route.signalD){
+      const cycle=Math.floor((sim.time-signal('S4').offset)/sim.cycleLength);
+      if(!s4Passages.has(cycle))s4Passages.set(cycle,new Set());
+      s4Passages.get(cycle).add(car.route.id);
+    }
+  }
   minVisible=Math.min(minVisible,sim.cars.filter(c=>c.active&&c.x>=0&&c.x<=693&&c.y>=0&&c.y<=649).length);
   if(frame<1800&&frame%12===0)animationFrames.push({time:sim.time,cars:sim.cars.filter(c=>c.active).map(c=>({x:c.x,y:c.y,angle:c.angle,color:c.route.color})),signals:sim.signals.map(s=>({id:s.id,x:s.x,y:s.y,head:s.head,label:s.label,...sim.signalState(s,sim.time)}))});
   for(const car of sim.cars){if(!car.active)continue;const before=previous[car.id];if(before.active&&before.plan===car.plan&&before.d<=car.route.signalD+1e-6&&car.d>car.route.signalD+1e-6&&sim.signalState(car.route.signal,car.plan.release).phase!=='green')redViolations++;if(Math.abs(car.d-car.route.signalD)<1e-6&&sim.signalState(car.route.signal,sim.time).phase==='red')waitingSamples++;}
-  if(frame%3===0)for(let i=0;i<sim.cars.length;i++)for(let j=i+1;j<sim.cars.length;j++)if(sim.cars[i].active&&sim.cars[j].active&&sim.overlaps(sim.cars[i],sim.cars[j],0))overlapFrames++;
+  if(frame%3===0)for(let i=0;i<sim.cars.length;i++)for(let j=i+1;j<sim.cars.length;j++)if(sim.cars[i].active&&sim.cars[j].active&&sim.overlaps(sim.cars[i],sim.cars[j],0)){
+    if(acceptedCrossingOverlap(sim.cars[i],sim.cars[j]))acceptedOverlapFrames++;else overlapFrames++;
+  }
 }
 fs.writeFileSync(path.join(root,'verificacion','animation-frames.json'),JSON.stringify(animationFrames));
 const launches=sim.routes.map((r,i)=>({route:r.id,launched:r.launched-launchesBefore[i]}));
 const result={controls:'passed',signals:'S1 → S2+S3 → S4 → S5 → S1; synchronized transitions and configurable stage lengths passed',calle9a:'one-way from Calle 9 and La Gran Colombia',calle10:'one-way from La Gran Colombia and both Diagonal approaches',routes:sim.routes.length,carSlots:sim.cars.length,offRoad:failures,overlapFrames,redViolations,waitingSamples,launches};
 result.flow=flowMeasurements;result.minVisible=minVisible;
+result.acceptedS4S5OverlapSamples=acceptedOverlapFrames;
 assert(minVisible>=50,'Normal flow must sustain at least 50 visible vehicles in the default cycle');
 
 console.log(JSON.stringify(result,null,2));
@@ -169,3 +189,7 @@ assert.equal(overlapFrames,0,'Cars overlap');
 assert.equal(redViolations,0,'Cars must not enter on red or yellow');
 assert(waitingSamples>0,'Cars must visibly wait at red lights');
 assert(launches.every(r=>r.launched>0),'Each street must receive moving cars');
+for(const cycle of [0,1])for(const route of sim.routes.filter(r=>r.signal.id==='S4')){
+  assert(s4Passages.get(cycle)?.has(route.id),`${route.id} must cross during S4 green in cycle ${cycle+1}`);
+}
+console.log('S4: both Calle 9 routes passed during each green in two consecutive cycles.');
